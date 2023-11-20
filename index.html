@@ -6,25 +6,27 @@
     <link rel="stylesheet" href="css/style.css">
     <title>Api</title>
   </head>
-
+  
   <body>
-    <div id="container">
+    <header>
       <h1>Todo List</h1>
-
+    </header>
+  
+    <main id="container">
       <!-- Add the Task -->
       <form id="addTaskForm" onsubmit="event.preventDefault(); addTask();">
         <label for="taskContent">New Task:</label>
         <div class="input-group">
           <input type="text" id="taskContent" name="taskContent" placeholder="Type here to add a task!" required>
-          <button type="submit">Add Task</button>
+          <button id="add-button" type="submit">Add Task</button>
         </div>
       </form>
-
+    
       <ul id="taskList">
         <!-- List of Tasks -->
       </ul>
-    </div>
-
+    </main>
+  
     <script src="js/code.js"></script>
   </body>
 </html>

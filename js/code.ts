@@ -1,109 +1,109 @@
-// Define the structure of the task data
-interface TaskData {
-  tasks: { id: number; content: string; completed: boolean }[];
+interface Task {
+  id: number;
+  content: string;
+  completed: boolean;
 }
 
-// Define the structure of the response data when adding a task
+interface TaskData {
+  tasks: Task[];
+}
+
 interface AddTaskResponse {
   message: string;
 }
 
-// Function to fetch all tasks and display them
-function getAllTasks() {
-  fetch('http://localhost/api/app/?cmd=all')
-    .then(response => response.json() as Promise<TaskData>)
-    .then(data => {
-      const taskList = document.getElementById('taskList') as HTMLUListElement;
-      taskList.innerHTML = '';
-
-      data.tasks.forEach(task => {
-        const listItem = document.createElement('li');
-
-        // Create a checkbox for the completion status
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.checked = task.completed;
-        checkbox.addEventListener('change', () => {
-          // Call a function to update the completion status when the checkbox is toggled
-          updateCompletionStatus(task.id, checkbox.checked);
-        });
-
-        // Create a button for deleting the task
-        const deleteButton = document.createElement('button');
-        deleteButton.textContent = 'Delete';
-        deleteButton.addEventListener('click', () => {
-          // Call a function to delete the task when the button is clicked
-          deleteTask(task.id);
-        });
-
-        // Display the task content
-        const taskContent = document.createElement('span');
-        taskContent.textContent = task.content;
-
-        // Append the checkbox, delete button, and task content to the list item
-        listItem.appendChild(checkbox);
-        listItem.appendChild(deleteButton);
-        listItem.appendChild(taskContent);
-
-        // Append the list item to the task list
-        taskList.appendChild(listItem);
-      });
-    })
-    .catch(error => console.error('Error fetching tasks:', error));
+function handleError(error: any) {
+  console.error('An error occurred:', error);
 }
 
-// Function to add a new task
-function addTask() {
+async function makeFetchCall(url: string, method: string = 'GET', body?: any) {
+  try {
+    const response = await fetch(url, {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: body ? JSON.stringify(body) : undefined,
+    });
+    const data = await response.json();
+    console.log(data.message);
+    return data;
+  } catch (error) {
+    handleError(error);
+  }
+}
+
+function createTaskElement(task: Task) {
+  const listItem = document.createElement('li');
+
+  const checkbox = document.createElement('input');
+  checkbox.type = 'checkbox';
+  checkbox.className = 'completion-checkbox';
+  checkbox.checked = task.completed;
+  checkbox.addEventListener('change', () => {
+    updateCompletionStatus(task.id, checkbox.checked);
+  });
+
+  const deleteButton = document.createElement('button');
+  deleteButton.textContent = 'Delete';
+  deleteButton.className = 'delete-button';
+  deleteButton.addEventListener('click', () => {
+    deleteTask(task.id);
+  });
+
+  const taskContent = document.createElement('span');
+  taskContent.textContent = task.content;
+  taskContent.className = 'task-content';
+
+  listItem.appendChild(checkbox);
+  listItem.appendChild(taskContent);
+  listItem.appendChild(deleteButton);
+
+  return listItem;
+}
+
+async function getAllTasks() {
+  const data = await makeFetchCall('http://localhost/api/app/?cmd=all');
+  if (data) {
+    const taskList = document.getElementById('taskList') as HTMLUListElement;
+    taskList.innerHTML = '';
+
+    data.tasks.forEach((task: TaskData['tasks'][0]) => {
+      const taskElement = createTaskElement(task);
+      taskList.appendChild(taskElement);
+    });
+  }
+}
+
+async function addTask() {
   const taskContentInput = document.getElementById('taskContent') as HTMLInputElement;
   const taskContent = taskContentInput.value;
 
-  // Check if the task content is empty
   if (taskContent.trim() === '') {
-    alert('Well come on, at least actually enter something you pigeon.'); // Display an alert or use another method to show an error message
+    alert('Please enter a task.');
     return;
   }
 
-  fetch('http://localhost/api/app/?cmd=add', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({ content: taskContent }),
-  })
-    .then(response => response.json() as Promise<AddTaskResponse>)
-    .then(data => {
-      console.log(data.message);
-      getAllTasks(); // Refresh the task list after adding a new task
-    })
-    .catch(error => console.error('Error adding task:', error));
+  const data = await makeFetchCall('http://localhost/api/app/?cmd=add', 'POST', { content: taskContent });
+  if (data) {
+    getAllTasks();
+  }
 }
 
-// Function to delete a task
-function deleteTask(taskId: number) {
-  fetch(`http://localhost/api/app/?cmd=delete&id=${taskId}`, {
-    method: 'POST',
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data.message);
-      getAllTasks(); // Refresh the task list after deleting the task
-    })
-    .catch(error => console.error('Error deleting task:', error));
+async function deleteTask(taskId: number) {
+  const data = await makeFetchCall(`http://localhost/api/app/?cmd=delete&id=${taskId}`, 'POST');
+  if (data) {
+    getAllTasks();
+  }
 }
 
-function updateCompletionStatus(taskId: number, completed: boolean) {
-  fetch(`http://localhost/api/app/?cmd=update&id=${taskId}&completed=${completed ? 1 : 0}`, {
-    method: 'POST',
-  })
-    .then(response => response.json())
-    .then(data => {
-      console.log(data.message);
-      getAllTasks(); // Refresh the task list after updating the completion status
-    })
-    .catch(error => console.error('Error updating completion status:', error));
+async function updateCompletionStatus(taskId: number, completed: boolean) {
+  const data = await makeFetchCall(`http://localhost/api/app/?cmd=update&id=${taskId}&completed=${completed ? 1 : 0}`, 'POST');
+  if (data) {
+    getAllTasks();
+  }
 }
 
-// Initial load of tasks when the entire page is fully loaded
 window.onload = () => {
   getAllTasks();
 };
