@@ -8,10 +8,8 @@ function sendAllTasks() {
     Database::query($sql);
     $rows = Database::getAll();
 
-    // Set content type to JSON
     header('Content-Type: application/json');
 
-    // Send a JSON response with indentation
     echo json_encode(['tasks' => $rows], JSON_PRETTY_PRINT);
 }
 
@@ -29,20 +27,16 @@ function sendOneTask() {
     $row = Database::get();
 
     if ($row === false) {
-        // Handle the database error, maybe log it
         http_response_code(500);
         die();
     }
 
-    // Set content type to JSON
     header('Content-Type: application/json');
 
-    // Send a JSON response with indentation
     echo json_encode(['task' => $row], JSON_PRETTY_PRINT);
 }
 
 function addTask() {
-    // Check if the required parameters are present
     $data = json_decode(file_get_contents("php://input"), true);
 
     if (!isset($data['content'])) {
@@ -57,15 +51,12 @@ function addTask() {
     $placeholders = [':content' => $content];
     Database::query($sql, $placeholders);
 
-    // Optionally, you can get the ID of the newly inserted task
     $newTaskId = Database::getLastInsertId();
 
-    // Return a success message or the ID of the newly inserted task
     response(['message' => 'Task added successfully', 'new_task_id' => $newTaskId]);
 }
 
 function deleteTask() {
-    // Check if the required parameters are present
     if (!isset($_GET['id'])) {
         http_response_code(400);
         die();
@@ -78,7 +69,6 @@ function deleteTask() {
     $placeholders = [':id' => $id];
     Database::query($sql, $placeholders);
 
-    // Return a success message
     response(['message' => 'Task deleted successfully']);
 }
 
